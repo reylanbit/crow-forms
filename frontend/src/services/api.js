@@ -11,33 +11,49 @@ export async function getHealth() {
 }
 
 export async function addResponse(payload) {
-  const res = await fetch(`${API_URL}/api/responses`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error('failed')
-  return await res.json()
+  try {
+    const res = await fetch(`${API_URL}/api/responses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) throw new Error('failed')
+    return await res.json()
+  } catch {
+    return { ok: false }
+  }
 }
 
 export async function getResponses() {
-  const res = await fetch(`${API_URL}/api/responses`)
-  if (!res.ok) throw new Error('failed')
-  return await res.json()
+  try {
+    const res = await fetch(`${API_URL}/api/responses`)
+    if (!res.ok) throw new Error('failed')
+    return await res.json()
+  } catch {
+    return []
+  }
 }
 
 export async function addMember(payload) {
-  const res = await fetch(`${API_URL}/api/members`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error('failed')
-  return await res.json()
+  try {
+    const res = await fetch(`${API_URL}/api/members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) throw new Error('failed')
+    return await res.json()
+  } catch {
+    return { ok: false }
+  }
 }
 
 export async function getMembers() {
-  const res = await fetch(`${API_URL}/api/members`)
-  if (!res.ok) throw new Error('failed')
-  return await res.json()
+  try {
+    const res = await fetch(`${API_URL}/api/members`)
+    if (!res.ok) throw new Error('failed')
+    return await res.json()
+  } catch {
+    return []
+  }
 }

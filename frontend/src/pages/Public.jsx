@@ -7,14 +7,20 @@ export default function Public() {
   const [summary, setSummary] = useState({ members: 0, responses: 0, quintaSim: 0, sabadoSim: 0 })
 
   useEffect(() => {
-    getHealth().then(setHealth)
-    Promise.all([getMembers(), getResponses()]).then(([m, r]) => {
-      const members = Array.isArray(m) ? m.length : 0
-      const responses = Array.isArray(r) ? r.length : 0
-      const quintaSim = (Array.isArray(r) ? r : []).filter((x) => x.quinta === 'a').length
-      const sabadoSim = (Array.isArray(r) ? r : []).filter((x) => x.sabado === 'a').length
-      setSummary({ members, responses, quintaSim, sabadoSim })
-    }).catch(() => {})
+    getHealth().then((h) => {
+      setHealth(h)
+      if (h?.status !== 'healthy') {
+        setSummary({ members: 0, responses: 0, quintaSim: 0, sabadoSim: 0 })
+        return
+      }
+      Promise.all([getMembers(), getResponses()]).then(([m, r]) => {
+        const members = Array.isArray(m) ? m.length : 0
+        const responses = Array.isArray(r) ? r.length : 0
+        const quintaSim = (Array.isArray(r) ? r : []).filter((x) => x.quinta === 'a').length
+        const sabadoSim = (Array.isArray(r) ? r : []).filter((x) => x.sabado === 'a').length
+        setSummary({ members, responses, quintaSim, sabadoSim })
+      }).catch(() => {})
+    })
   }, [])
 
   return (
