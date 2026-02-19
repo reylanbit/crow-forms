@@ -1,15 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { addResponse } from '../services/api'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 export default function Formulario() {
   const { register, handleSubmit, watch } = useForm()
   const [ok, setOk] = useState(null)
   const [loading, setLoading] = useState(false)
-  const jQuinta = watch('quinta') === 'c'
-  const jSabado = watch('sabado') === 'c'
+  const jQuinta = watch('quinta') === 'c' || watch('quinta') === 'b'
+  const jSabado = watch('sabado') === 'c' || watch('sabado') === 'b'
   const MotionH1 = motion.h1
+  const prefName = sessionStorage.getItem('member_name') || ''
+  const prefPhone = sessionStorage.getItem('member_phone') || ''
+  const nav = useNavigate()
+
+  useEffect(() => {
+    const member = sessionStorage.getItem('crows_member') === '1'
+    if (!member) nav('/login')
+  }, [nav])
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -18,7 +27,7 @@ export default function Formulario() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        ™ ϟ Guerra das Sombras 么
+        Guerra das Sombras — The Crows
       </MotionH1>
       <form
         onSubmit={handleSubmit(async (data) => {
@@ -35,13 +44,14 @@ export default function Formulario() {
         })}
         className="glass mt-4 p-4 rounded border border-neutral-700 grid gap-3"
       >
-        <input {...register('nome', { required: true })} className="p-3 rounded bg-neutral-800 border border-neutral-700" placeholder="Qual seu nome?" />
+        <input defaultValue={prefName} {...register('nome', { required: true })} className="p-3 rounded bg-neutral-800 border border-neutral-700" placeholder="Qual seu nome?" />
         <input {...register('nick', { required: true })} className="p-3 rounded bg-neutral-800 border border-neutral-700" placeholder="Qual seu nick?" />
+        <input defaultValue={prefPhone} {...register('telefone')} className="p-3 rounded bg-neutral-800 border border-neutral-700" placeholder="Seu telefone (WhatsApp)" />
 
         <div>
-          <label className="block mb-1">Podemos contar com sua presença na Quinta?</label>
+          <label className="block mb-1">Disponibilidade na Quinta</label>
           <select {...register('quinta', { required: true })} className="p-3 rounded bg-neutral-800 border border-neutral-700 w-full">
-            <option value="a">a. Quinta</option>
+            <option value="a">a. Sim</option>
             <option value="b">b. Não</option>
             <option value="c">☠️👨🏼‍🎓👮🏻‍♂️🫂 Justifique-se🤕🤒🤢🤡</option>
           </select>
@@ -51,9 +61,9 @@ export default function Formulario() {
         </div>
 
         <div>
-          <label className="block mb-1">Podemos contar com sua presença no Sábado?</label>
+          <label className="block mb-1">Disponibilidade no Sábado</label>
           <select {...register('sabado', { required: true })} className="p-3 rounded bg-neutral-800 border border-neutral-700 w-full">
-            <option value="a">a. Sábado</option>
+            <option value="a">a. Sim</option>
             <option value="b">b. Não</option>
             <option value="c">☠️👨🏼‍🎓👮🏻‍♂️🫂 Justifique-se🤕🤒🤢🤡</option>
           </select>
@@ -93,12 +103,12 @@ export default function Formulario() {
 
         <textarea {...register('tempo')} className="p-3 rounded bg-neutral-800 border border-neutral-700" rows={3} placeholder="Quanto tempo você joga?" />
 
-        <button type="submit" className="p-3 rounded bg-blood text-white" disabled={loading}>{loading ? 'Enviando...' : 'Enviar'}</button>
+        <button type="submit" className="p-3 rounded bg-gold text-black" disabled={loading}>{loading ? 'Enviando...' : 'Confirmar Participação'}</button>
       </form>
       {ok && !ok.error && (
-        <div className="mt-3">Enviado</div>
+        <div className="mt-3 text-gold">Registro enviado. Honra aos Corvos!</div>
       )}
-      {ok && ok.error && <div className="mt-3 text-red-400">Falha ao enviar</div>}
+      {ok && ok.error && <div className="mt-3 text-red-400">Não foi possível enviar. Tente novamente.</div>}
     </div>
   )
 }

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "echo \"frontend tests not configured\"",
+    "test": "vitest --run",
     "preview": "vite preview"
   },
   "devDependencies": {
