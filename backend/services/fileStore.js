@@ -12,10 +12,22 @@ async function ensure() {
   try {
     await fs.mkdir(dataDir, { recursive: true })
     await fs.access(membersFile).catch(async () => {
-      await fs.writeFile(membersFile, "nome,whatsapp,ts\n", "utf8")
+      const banner = [
+        "# ========================== The Crows — Diablo IV ==========================",
+        "# CSV de Membros — formato: nome, whatsapp, ts",
+        "nome,whatsapp,ts",
+        ""
+      ].join("\n")
+      await fs.writeFile(membersFile, banner, "utf8")
     })
     await fs.access(responsesFile).catch(async () => {
-      await fs.writeFile(responsesFile, "nome,nick,quinta,sabado,classe,ressonancia,ts\n", "utf8")
+      const banner = [
+        "# ========================== The Crows — Diablo IV ==========================",
+        "# CSV de Respostas — formato: nome, nick, quinta, sabado, classe, ressonancia, ts",
+        "nome,nick,quinta,sabado,classe,ressonancia,ts",
+        ""
+      ].join("\n")
+      await fs.writeFile(responsesFile, banner, "utf8")
     })
   } catch {}
 }
@@ -33,8 +45,11 @@ export async function addMemberFile(payload) {
 export async function getMembersFile() {
   await ensure()
   const text = await fs.readFile(membersFile, "utf8")
-  const lines = text.trim().split(/\r?\n/).slice(1)
-  return lines.map((l) => {
+  const rows = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#") && l.toLowerCase() !== "nome,whatsapp,ts")
+  return rows.map((l) => {
     const [nome, whatsapp, ts] = l.split(",")
     return { nome, whatsapp, ts }
   })
@@ -57,8 +72,11 @@ export async function addResponseFile(payload) {
 export async function getResponsesFile() {
   await ensure()
   const text = await fs.readFile(responsesFile, "utf8")
-  const lines = text.trim().split(/\r?\n/).slice(1)
-  return lines.map((l) => {
+  const rows = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#") && l.toLowerCase() !== "nome,nick,quinta,sabado,classe,ressonancia,ts")
+  return rows.map((l) => {
     const [nome, nick, quinta, sabado, classe, ressonancia, ts] = l.split(",")
     return { nome, nick, quinta, sabado, classe, ressonancia, ts }
   })
