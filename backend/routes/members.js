@@ -1,5 +1,4 @@
 import { Router } from "express"
-import { addMember, getMembers } from "../services/googleSheets.js"
 import { addMemberFile, getMembersFile } from "../services/fileStore.js"
 import { addMemberSupabase, getMembersSupabase } from "../services/supabaseStore.js"
 
@@ -8,11 +7,6 @@ const router = Router()
 router.get("/", async (_req, res) => {
   try {
     let data = []
-    try {
-      data = await getMembers()
-    } catch {
-      // ignore
-    }
     if (!Array.isArray(data) || data.length === 0) {
       try {
         data = await getMembersSupabase()
@@ -32,12 +26,7 @@ router.get("/", async (_req, res) => {
 router.post("/", async (req, res) => {
   try {
     const payload = req.body || {}
-    let data = null
-    try {
-      data = await addMember(payload)
-    } catch {
-      // ignore
-    }
+    let data = { ok: true }
     try {
       await addMemberSupabase(payload)
     } catch {
