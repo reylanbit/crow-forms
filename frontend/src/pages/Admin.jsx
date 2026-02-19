@@ -66,7 +66,29 @@ export default function Admin() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-gothic text-gold">Painel Admin</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-gothic text-gold">Painel Admin</h1>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-2 rounded bg-blood text-white"
+            onClick={() => {
+              window.open(`${import.meta.env.VITE_API_URL}/api/members/export`, '_blank')
+            }}
+          >
+            Exportar CSV
+          </button>
+          <button
+            className="px-3 py-2 rounded bg-neutral-700 text-white"
+            onClick={() => {
+              sessionStorage.removeItem('crows_admin')
+              setAuthed(false)
+              window.dispatchEvent(new Event('crows_session_update'))
+            }}
+          >
+            Sair
+          </button>
+        </div>
+      </div>
       {loading && <div className="mt-3">Carregando...</div>}
       {!loading && (
         <>
