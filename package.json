@@ -1,0 +1,11 @@
+{
+  "name": "the-crows",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c green,cyan \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "lint": "echo \"no lint configured at root\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
