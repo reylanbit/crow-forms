@@ -6,7 +6,7 @@ import responsesRouter from "./routes/responses.js"
 import adminRouter from "./routes/admin.js"
 
 dotenv.config()
-const app = express()
+export const app = express()
 const port = process.env.PORT || 5000
 
 app.use(cors())
@@ -20,6 +20,8 @@ app.use("/api/members", membersRouter)
 app.use("/api/responses", responsesRouter)
 app.use("/api/admin", adminRouter)
 
-app.listen(port, () => {
-  console.log(`Backend running on http://localhost:${port}`)
-})
+if (process.env.NODE_ENV !== "test") {
+  app.listen(port, () => {
+    console.log(`Backend running on http://localhost:${port}`)
+  })
+}
