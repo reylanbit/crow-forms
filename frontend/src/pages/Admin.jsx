@@ -72,7 +72,8 @@ export default function Admin() {
           <button
             className="px-3 py-2 rounded bg-blood text-white"
             onClick={() => {
-              window.open(`${import.meta.env.VITE_API_URL}/api/members/export`, '_blank')
+              const base = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '')
+              window.open(`${base}/api/members/export`, '_blank')
             }}
           >
             Exportar CSV

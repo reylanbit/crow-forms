@@ -1,16 +1,10 @@
 import { Router } from "express"
-import { ping } from "../services/googleSheets.js"
 import { buildWhatsAppLink } from "../services/whatsapp.js"
 
 const router = Router()
 
 router.get("/ping", async (_req, res) => {
-  try {
-    const data = await ping()
-    res.status(200).json(data)
-  } catch {
-    res.status(500).json({ error: "failed" })
-  }
+  res.status(200).json({ status: "healthy" })
 })
 
 router.post("/whatsapp-link", (req, res) => {
