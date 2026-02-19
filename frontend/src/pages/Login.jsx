@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { addMember } from '../services/api'
 
 export default function Login() {
   const [name, setName] = useState('')
@@ -11,6 +12,8 @@ export default function Login() {
     sessionStorage.setItem('crows_member', '1')
     sessionStorage.setItem('member_name', name)
     sessionStorage.setItem('member_phone', phone)
+    window.dispatchEvent(new Event('crows_session_update'))
+    addMember({ nome: name, telefone: phone }).catch(() => {})
     nav('/formulario')
   }
 

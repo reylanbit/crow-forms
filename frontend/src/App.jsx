@@ -1,5 +1,6 @@
 import './App.css'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import Public from './pages/Public'
 import Formulario from './pages/Formulario'
 import Login from './pages/Login'
@@ -7,11 +8,25 @@ import Admin from './pages/Admin'
  
 
 function App() {
+  const [isMember, setIsMember] = useState(sessionStorage.getItem('crows_member') === '1')
+
+  useEffect(() => {
+    function sync() {
+      setIsMember(sessionStorage.getItem('crows_member') === '1')
+    }
+    window.addEventListener('storage', sync)
+    window.addEventListener('crows_session_update', sync)
+    return () => {
+      window.removeEventListener('storage', sync)
+      window.removeEventListener('crows_session_update', sync)
+    }
+  }, [])
+
   return (
     <BrowserRouter>
       <nav className="flex gap-4 p-4 text-gold">
         <Link to="/" className="underline">Início</Link>
-        <Link to="/formulario" className="underline">Formulário</Link>
+        {isMember && <Link to="/formulario" className="underline">Formulário</Link>}
         <Link to="/login" className="underline">Login Membros</Link>
         <Link to="/admin" className="underline">Admin</Link>
       </nav>
