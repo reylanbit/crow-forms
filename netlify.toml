@@ -1,9 +1,12 @@
 [build]
 base = "frontend"
-command = "npm run build"
-publish = "frontend/dist"
+command = "npm ci && npm run build"
+publish = "dist"
 
 [[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200
+
+[context.production.environment]
+VITE_API_URL = "https://c27a55d086ec240835ece75839f70588.onrender.com"
