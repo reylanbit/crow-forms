@@ -7,5 +7,3 @@ publish = "dist"
 from = "/*"
 to = "/index.html"
 status = 200
-
-## Removido VITE_API_URL para usar chamadas relativas + proxies no _redirects
