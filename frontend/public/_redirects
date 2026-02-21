@@ -1,1 +1,3 @@
+/api/* https://c27a55d086ec240835ece75839f70588.onrender.com/api/:splat 200
+/health https://c27a55d086ec240835ece75839f70588.onrender.com/health 200
 /* /index.html 200
