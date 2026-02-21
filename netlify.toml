@@ -7,6 +7,3 @@ publish = "dist"
 from = "/*"
 to = "/index.html"
 status = 200
-
-[context.production.environment]
-VITE_API_URL = "https://c27a55d086ec240835ece75839f70588.onrender.com"
