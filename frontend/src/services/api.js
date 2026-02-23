@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '')
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : ''
 
 export async function getHealth() {
   try {
@@ -55,5 +55,15 @@ export async function getMembers() {
     return await res.json()
   } catch {
     return []
+  }
+}
+
+export async function getSupabaseStatus() {
+  try {
+    const res = await fetch(`${API_URL}/api/admin/supabase`)
+    if (!res.ok) throw new Error('failed')
+    return await res.json()
+  } catch {
+    return { enabled: false, ok: false }
   }
 }
