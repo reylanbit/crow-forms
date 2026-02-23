@@ -1,35 +1,50 @@
-import { createClient } from "@supabase/supabase-js"
+import pg from "pg"
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
 const TABLE = process.env.SUPABASE_MEMBERS_TABLE || "members_logins"
+const PG_URL =
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URL ||
+  null
 
-let client = null
-function getClient() {
-  if (!client && SUPABASE_URL && SUPABASE_KEY) {
-    client = createClient(SUPABASE_URL, SUPABASE_KEY)
+let pool = null
+function getPool() {
+  if (!pool && PG_URL) {
+    pool = new pg.Pool({
+      connectionString: PG_URL,
+      ssl: { rejectUnauthorized: false }
+    })
   }
-  return client
+  return pool
+}
+
+export async function getSupabaseStatus() {
+  try {
+    const p = getPool()
+    if (!p) return { enabled: false, ok: false, table: TABLE }
+    const q = `SELECT 1 FROM ${TABLE} LIMIT 1`
+    await p.query(q)
+    return { enabled: true, ok: true, table: TABLE }
+  } catch (e) {
+    return { enabled: !!pool, ok: false, table: TABLE, error: String(e?.message || e) }
+  }
 }
 
 export async function addMemberSupabase(payload) {
-  const c = getClient()
-  if (!c) return null
+  const p = getPool()
+  if (!p) return null
   const ts = new Date().toISOString()
-  const data = {
-    nome: payload?.nome || null,
-    whatsapp: payload?.telefone || payload?.whatsapp || null,
-    ts
-  }
-  const { error } = await c.from(TABLE).insert(data)
-  if (error) throw error
+  const nome = payload?.nome || null
+  const whatsapp = payload?.telefone || payload?.whatsapp || null
+  const text = `INSERT INTO ${TABLE} (nome, whatsapp, ts) VALUES ($1, $2, $3)`
+  const values = [nome, whatsapp, ts]
+  await p.query(text, values)
   return { ok: true }
 }
 
 export async function getMembersSupabase() {
-  const c = getClient()
-  if (!c) return []
-  const { data, error } = await c.from(TABLE).select("nome,whatsapp,ts").order("ts", { ascending: false })
-  if (error) throw error
-  return data || []
+  const p = getPool()
+  if (!p) return []
+  const text = `SELECT nome, whatsapp, ts FROM ${TABLE} ORDER BY ts DESC`
+  const { rows } = await p.query(text)
+  return rows || []
 }
