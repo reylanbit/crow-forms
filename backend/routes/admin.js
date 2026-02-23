@@ -1,6 +1,6 @@
 import { Router } from "express"
 import { buildWhatsAppLink } from "../services/whatsapp.js"
-import { getSupabaseStatus } from "../services/supabaseStore.js"
+import * as supabaseStore from "../services/supabaseStore.js"
 import redis, { ensureRedisConnected } from "../services/redisClient.js"
 
 const router = Router()
@@ -17,7 +17,8 @@ router.post("/whatsapp-link", (req, res) => {
 
 router.get("/supabase", async (_req, res) => {
   try {
-    const status = await getSupabaseStatus()
+    const fn = supabaseStore?.getSupabaseStatus
+    const status = fn ? await fn() : { enabled: false, ok: false }
     res.status(200).json(status)
   } catch {
     res.status(500).json({ enabled: false, ok: false })
