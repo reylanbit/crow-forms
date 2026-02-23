@@ -1,61 +1,58 @@
 # The Crows - Diablo Immortal (Guerra das Sombras)
 
-Aplicação web com frontend em React (Vite) e backend via Google Apps Script (GAS) para gestão de membros e respostas da Guerra das Sombras do clã The Crows.
+Aplicação com frontend em React (Vite) e backend Node/Express, persistindo dados em Postgres. Deploy: Frontend no Netlify com proxy para o backend no Render.
 
 ## Visão Geral
-- Frontend moderno com Tailwind, Framer Motion, React Hook Form, Recharts e React Router.
-- Sem backend próprio: toda persistência na planilha Google via Apps Script.
-- Admin com login simples, métricas, gráfico e envio de lembretes via WhatsApp.
+- Frontend: React + Tailwind + React Hook Form + Recharts + Router.
+- Backend: Express com rotas REST e arquivo CSV como fallback.
+- Banco: Postgres (substitui Supabase).
+- Infra:
+  - Netlify build em `frontend/` e publicação de SPA com `_redirects`.
+  - Render para o backend (Node runtime) e Postgres (via `POSTGRES_URL`).
+  - Redis opcional (health/ping) para cenários de cache/teste.
 
 ## Estrutura
 ```
+backend/
+  routes/ (members, responses, admin)
+  services/ (fileStore, supabaseStore [usa Postgres internamente], redisClient)
+  data/members.csv
+  server.js
 frontend/
-  public/
-    members-example.csv
-  src/
-    pages/ (Public, Formulario, Login, Admin)
-    services/api.js
-    App.jsx, main.jsx, styles
-  tailwind.config.js, postcss.config.js, .env.example
-gas/
-  appscript.gs
+  public/_redirects
+  src/pages (Public, Formulario, Login, Admin)
+  src/services/api.js
+  App.jsx, main.jsx, estilos
+render.yaml
+netlify.toml
 ```
 
-## Pré-requisitos
-- Conta Google
-- Planilha Google (pode ser a ativa) para receber dados
-- Acesso ao Google Apps Script
-
-## Configurar o Google Apps Script
-1. Abra Google Apps Script (script.google.com) e crie um projeto.
-2. Crie um arquivo `appscript.gs` e cole o conteúdo de [gas/appscript.gs](gas/appscript.gs).
-3. No editor, menu Deploy > Test deployments para validar rapidamente.
-4. Deploy como Web App:
-   - Deploy > Manage deployments > New deployment
-   - Type: Web app
-   - Execute as: Me (owner)
-   - Who has access: Anyone (ou restrito ao seu domínio)
-   - Salve e copie a URL pública gerada.
-5. A primeira execução pode pedir autorização; aceite.
-6. A planilha ativa receberá abas: `Membros`, `Respostas`, `Config` (criadas automaticamente).
-
-### Ações suportadas (via POST JSON)
-- `ping` -> `{ status: "healthy" }`
-- `addMember` -> `{ ok: true }`
-- `getMembers` -> `[{ nome, telefone }, ...]`
-- `addResponse` -> `{ ok: true }`
-- `getResponses` -> `[{ nome, nick, quinta, sabado, classe, pet, ressonancia, tempo, telefone, createdAt }, ...]`
-
-## Configurar o Frontend (.env)
-Crie `frontend/.env` com:
+## Ambiente e Variáveis
+Backend (.env):
 ```
-VITE_APP_SCRIPT_URL=https://script.google.com/macros/s/SEU_DEPLOYMENT_ID/exec
-VITE_ADMIN_PASSWORD=crowscrows
-VITE_PUBLIC_URL=https://thecrows.vercel.app
+PORT=5000
+POSTGRES_URL=postgres://USER:PASS@HOST:PORT/DBNAME
+SUPABASE_MEMBERS_TABLE=members_logins
+REDIS_URL=redis://HOST:PORT
 ```
-- `VITE_APP_SCRIPT_URL`: URL pública do Web App do GAS
-- `VITE_ADMIN_PASSWORD`: senha do painel admin
-- `VITE_PUBLIC_URL`: domínio público (para link no WhatsApp). Se não definir, usa o `window.location.origin`.
+- `POSTGRES_URL`: string de conexão completa (com SSL aceito pelo Render).
+- `SUPABASE_MEMBERS_TABLE`: nome da tabela (mantido por compatibilidade).
+- `REDIS_URL`: opcional, usado pelo endpoint `/api/admin/redis`.
+
+Frontend (build):
+- Em produção usa caminhos relativos para `/health` e `/api/*` com proxy do Netlify.
+- Admin password: `VITE_ADMIN_PASSWORD` (opcional; default `crowscrows`).
+
+## Banco (Postgres)
+Crie a tabela de membros:
+```sql
+CREATE TABLE IF NOT EXISTS members_logins (
+  id SERIAL PRIMARY KEY,
+  nome TEXT,
+  whatsapp TEXT,
+  ts TIMESTAMPTZ
+);
+```
 
 ## Rodar localmente
 Na raiz:
@@ -63,37 +60,46 @@ Na raiz:
 npm install
 npm run dev
 ```
-Abra: http://localhost:5173/
+Abre frontend em http://localhost:5173 e backend em http://localhost:5000.
 
-## Deploy (Vercel/Netlify)
-- Crie um projeto apontando para `frontend/`
-- Configure variáveis em ambiente de build:
-  - `VITE_APP_SCRIPT_URL`
-  - `VITE_ADMIN_PASSWORD`
-  - `VITE_PUBLIC_URL`
-- Build com `npm run build` (padrão do Vite) e preview com `vite preview`
+## Deploy
+Render (backend):
+- Runtime: Node
+- rootDir: `backend`
+- buildCommand: `npm install`
+- startCommand: `npm run start`
+- healthCheckPath: `/health`
+- Env Vars: `PORT=5000`, `POSTGRES_URL=<sua conexão>`, `REDIS_URL=<opcional>`
 
-## Importar membros via CSV
-- Exemplo: [members-example.csv](frontend/public/members-example.csv)
-- Formato: `nome,telefone`
-- No painel admin, use o campo de upload para importar.
+Netlify (frontend):
+- [netlify.toml](netlify.toml) com base `frontend`, publish `dist`.
+- `_redirects`:
+  ```
+  /api/* https://SEU_BACKEND.onrender.com/api/:splat 200
+  /health https://SEU_BACKEND.onrender.com/health 200
+  /* /index.html 200
+  ```
 
-## Boas práticas e erros
-- O script GAS já cria abas e valida payloads mínimos.
-- O frontend trata estados de carregamento e exibe mensagens simples.
-- Não use API keys ou service accounts: todo acesso é via Apps Script com permissão do proprietário.
+## API (principais)
+- GET `/health` → `{ status: "healthy" }`
+- GET `/api/members` → lista de membros (Postgres → CSV fallback)
+- POST `/api/members` → adiciona membro (Postgres + CSV)
+- GET `/api/members/export` → CSV
+- GET `/api/responses` / POST `/api/responses` → respostas (CSV)
+- GET `/api/admin/ping` → `{ status: "healthy" }`
+- GET `/api/admin/supabase` → status do DB (Postgres) [compatibilidade]
+- GET `/api/admin/redis` → `{ ok: true, pong: "PONG" }` (se configurado)
 
-## Estilo e identidade
-- Tema escuro, fontes góticas (Cinzel Decorative), cores sangue (blood) e ouro (gold), efeito vidro (glass), animações leves.
-
-## Scripts úteis
+## Scripts
 - Raiz:
-  - `npm run dev` (sobe somente o frontend)
+  - `npm run dev` (concurrently backend + frontend)
+- Backend:
+  - `npm run start` (produção)
+  - `npm run test` (Vitest + Supertest)
 - Frontend:
-  - `npm run build` (build de produção)
-  - `npm run preview` (preview local do build)
-  - `npm run lint` (lint)
+  - `npm run build`, `npm run preview`, `npm run test`, `npm run lint`
 
 ## Observações
-- Se seu domínio público ainda não estiver ativo (ex.: vercel 404), publique o projeto e atualize `VITE_PUBLIC_URL`.
-- Para mudar a planilha alvo, abra o Apps Script a partir da planilha desejada (Arquivo > Automação > Apps Script) e faça o deploy a partir dela; o projeto usa Spreadsheet ativa.
+- O endpoint `/api/admin/supabase` agora reporta o estado do Postgres.
+- Em produção, o frontend chama `/api/*` e `/health` via mesmo domínio (proxy Netlify), evitando CORS/aborts.
+- Configure o Postgres no Render ou serviço equivalente, com SSL ativo quando necessário.
