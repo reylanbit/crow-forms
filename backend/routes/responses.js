@@ -1,11 +1,11 @@
 import { Router } from "express"
-import { addResponse, getResponses } from "../services/googleSheets.js"
+import { addResponseFile, getResponsesFile } from "../services/fileStore.js"
 
 const router = Router()
 
 router.get("/", async (_req, res) => {
   try {
-    const data = await getResponses()
+    const data = await getResponsesFile()
     res.status(200).json(data)
   } catch {
     res.status(500).json({ error: "failed" })
@@ -15,8 +15,9 @@ router.get("/", async (_req, res) => {
 router.post("/", async (req, res) => {
   try {
     const payload = req.body || {}
-    const data = await addResponse(payload)
-    res.status(201).json(data)
+    const data = { ok: true }
+    await addResponseFile(payload)
+    res.status(201).json(data || { ok: true })
   } catch {
     res.status(500).json({ error: "failed" })
   }
